@@ -5,6 +5,7 @@
   "dependencies": {
     "coffee-script": "*",
     "mincer": "*",
-    "uglify-js": "*"
+    "uglify-js": "*",
+    "mocha-phantomjs": "*"
   }
 }
