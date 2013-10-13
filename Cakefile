@@ -5,10 +5,10 @@ spawn = require('child_process').spawn
 
 option '-g', '--grep [TEST]', 'sets the grep for `cake test`'
 
-data_dist_raw = "dist/ember-d.js"
-data_dist_min = "dist/ember-d.min.js"
-data_dist_min_map = "dist/ember-d.min.js.map"
-test_dist_raw = "dist/ember-d.test.js"
+data_dist_raw = "dist/emd.js"
+data_dist_min = "dist/emd.min.js"
+data_dist_min_map = "dist/emd.min.js.map"
+test_dist_raw = "dist/emd.test.js"
 data_raw = false
 
 task 'package:raw', 'package the raw distributable', ->
