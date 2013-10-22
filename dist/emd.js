@@ -1,9 +1,7 @@
-var D;
-
-D = Em.Namespace.create({
+this.EMD = Em.Namespace.create({
   VERSION: '0.1.0'
 });
-D.attr = function(serialized_name, meta) {
+EMD.attr = function(serialized_name, meta) {
   var key, property, property_args;
   if (meta == null) {
     meta = {};
@@ -45,7 +43,7 @@ D.attr = function(serialized_name, meta) {
   return property.property.apply(property, property_args).meta(meta);
 };
 
-D.attr.moment = function(serialized_name, meta) {
+EMD.attr.moment = function(serialized_name, meta) {
   if (meta == null) {
     meta = {};
   }
@@ -59,10 +57,10 @@ D.attr.moment = function(serialized_name, meta) {
       return moment.toDate();
     }
   };
-  return D.attr(serialized_name, meta);
+  return EMD.attr(serialized_name, meta);
 };
 
-D.attr.duration = function(serialized_name, meta) {
+EMD.attr.duration = function(serialized_name, meta) {
   var unit;
   if (meta == null) {
     meta = {};
@@ -78,10 +76,10 @@ D.attr.duration = function(serialized_name, meta) {
       return duration.as(unit);
     }
   };
-  return D.attr(serialized_name, meta);
+  return EMD.attr(serialized_name, meta);
 };
 
-D.attr.object = function(serialized_name, meta) {
+EMD.attr.object = function(serialized_name, meta) {
   if (meta == null) {
     meta = {};
   }
@@ -96,13 +94,19 @@ D.attr.object = function(serialized_name, meta) {
   meta.convertTo = function(proxy) {
     return proxy.get('content');
   };
-  return D.attr(serialized_name, meta);
+  return EMD.attr(serialized_name, meta);
 };
 
-D.attr.hasMany = function(model_name, meta) {
-  var property;
+EMD.attr.hasMany = function(model_name, meta) {
+  var key, property, val;
   if (meta == null) {
     meta = {};
+  }
+  if (typeof model_name === "object") {
+    key = Em.keys(model_name)[0];
+    val = model_name[key];
+    model_name = val;
+    meta.urlBinding = "links." + key;
   }
   if (!model_name) {
     Em.assert("You must specify model_name for hasMany");
@@ -117,7 +121,7 @@ D.attr.hasMany = function(model_name, meta) {
       meta.foreign_key || (meta.foreign_key = "" + (Em.get(this.constructor, 'singular')) + "_id");
       (_base = meta.query)[_name = meta.foreign_key] || (_base[_name] = this.get('id'));
     }
-    return D.RecordArrayRelation.create({
+    return EMD.RecordArrayRelation.create({
       parent: this,
       modelBinding: model_name,
       urlBinding: "parent." + meta.urlBinding,
@@ -126,7 +130,7 @@ D.attr.hasMany = function(model_name, meta) {
   }).property();
 };
 
-D.attr.belongsTo = function(serialized_name_to_model_name, meta) {
+EMD.attr.belongsTo = function(serialized_name_to_model_name, meta) {
   var model_name, raw_type, serialized_name;
   if (meta == null) {
     meta = {};
@@ -151,15 +155,15 @@ D.attr.belongsTo = function(serialized_name_to_model_name, meta) {
       return model.get('id');
     }
   };
-  return D.attr(serialized_name, meta);
+  return EMD.attr(serialized_name, meta);
 };
 Em.onLoad("Ember.Application", function(app) {
   app.initializer({
     name: "store",
     initialize: function(container, app) {
-      app.register('store:main', D.Store);
+      app.register('store:main', EMD.Store);
       app.set("defaultStore", container.lookup('store:main'));
-      return D.set("defaultStore", container.lookup('store:main'));
+      return EMD.set("defaultStore", container.lookup('store:main'));
     }
   });
   return app.initializer({
@@ -170,10 +174,12 @@ Em.onLoad("Ember.Application", function(app) {
     }
   });
 });
-D.Store = Em.Object.extend({
+EMD.Store = Em.Object.extend({
   _cache: {},
   ajax: function(options) {
-    options.accepts || (options.accepts = "application/json");
+    var _base;
+    options.headers || (options.headers = {});
+    (_base = options.headers).Accept || (_base.Accept = "application/json");
     return $.ajax.apply(this, arguments);
   },
   find: function(type, id) {
@@ -181,7 +187,7 @@ D.Store = Em.Object.extend({
     Em.assert("Cannot find a record without an id", id || id === null);
     if (type.constructor === String) {
       type = this.container.lookup("model:" + type);
-      Em.assert("Cannot find a record without a valid type", type instanceof D.Model);
+      Em.assert("Cannot find a record without a valid type", type instanceof EMD.Model);
       type = type.constructor;
     }
     if (record = this.findCached(type, id)) {
@@ -242,11 +248,11 @@ D.Store = Em.Object.extend({
   }
 });
 
-D.Store.reopenClass({
+EMD.Store.reopenClass({
   alias: function(method) {
     return function() {
       var args, store;
-      store = Em.get(D, "defaultStore");
+      store = Em.get(EMD, "defaultStore");
       args = [].slice.call(arguments);
       return store[method].apply(store, args);
     };
@@ -254,14 +260,14 @@ D.Store.reopenClass({
   aliasWithThis: function(method) {
     return function() {
       var args, store;
-      store = Em.get(D, "defaultStore");
+      store = Em.get(EMD, "defaultStore");
       args = [].slice.call(arguments);
       args.unshift(this);
       return store[method].apply(store, args);
     };
   }
 });
-D.Model = Em.Object.extend(Em.Evented, {
+EMD.Model = Em.Object.extend(Em.Evented, {
   link: null,
   linkChange: function() {
     var cachebust, connector, link;
@@ -290,29 +296,29 @@ D.Model = Em.Object.extend(Em.Evented, {
   toString: function() {
     return "" + this.constructor + "(" + (this.get('id')) + ")";
   },
-  id: D.attr('id', {
+  id: EMD.attr('id', {
     readonly: true
   }),
-  created: D.attr.moment('created_at', {
+  created: EMD.attr.moment('created_at', {
     readonly: true,
     optional: true
   }),
-  updated: D.attr.moment('updated_at', {
+  updated: EMD.attr.moment('updated_at', {
     readonly: true,
     optional: true
   }),
-  errors: D.attr('errors', {
+  errors: EMD.attr('errors', {
     readonly: true,
     optional: true
   }),
-  links: D.attr.object('links', {
+  links: EMD.attr.object('links', {
     readonly: true,
     optional: true
   }),
   idDidChange: (function() {
     return this.constructor.cache(this);
   }).observes("id"),
-  url: D.attr('url', {
+  url: EMD.attr('url', {
     readonly: true,
     extra_keys: ['id', 'link'],
     if_null: function() {
@@ -330,10 +336,11 @@ D.Model = Em.Object.extend(Em.Evented, {
     if (this.get('isLoaded')) {
       return ok(this);
     }
-    this.one('load', ok);
-    if (!this.get('isLoading')) {
-      return this.reload();
+    if (!this.get('id')) {
+      return ok(this);
     }
+    this.one('load', ok);
+    return this.reload();
   },
   toJson: function() {
     var props,
@@ -479,11 +486,11 @@ D.Model = Em.Object.extend(Em.Evented, {
   }
 });
 
-D.Model.reopenClass({
-  find: D.Store.aliasWithThis('find'),
-  cache: D.Store.aliasWithThis('cache'),
-  load: D.Store.aliasWithThis('load'),
-  ajax: D.Store.alias('ajax'),
+EMD.Model.reopenClass({
+  find: EMD.Store.aliasWithThis('find'),
+  cache: EMD.Store.aliasWithThis('cache'),
+  load: EMD.Store.aliasWithThis('load'),
+  ajax: EMD.Store.alias('ajax'),
   _beforeLoad: function(data) {
     var attributes, has_serialized_keys, property_keys, serialized_keys, shown_data,
       _this = this;
@@ -528,8 +535,21 @@ D.Model.reopenClass({
   singular: (function() {
     return this.toString().split(".").pop().underscore();
   }).property(),
+  pluralizer: (function() {
+    if (Inflector !== void 0) {
+      return function(model) {
+        var name;
+        name = model.toString().split('.').pop().underscore();
+        return Inflector.pluralize(name);
+      };
+    }
+  }).property(),
   plural: (function() {
-    return Em.assert("Please define a plural plural: 'plural' for " + this.constructor);
+    var pluralize;
+    if (pluralize = Em.get(this, "pluralizer")) {
+      return pluralize(this);
+    }
+    return Em.assert("Please define a plural plural: 'plural' for " + this.constructor + " or register a pluralizer with EMD.Model.set('pluralizer', ((model)->'models')");
   }).property("singular"),
   fromJson: function(data, instance) {
     var plural, singular,
@@ -549,8 +569,8 @@ D.Model.reopenClass({
     return this._super().setProperties(config);
   }
 });
-D.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
-  ajax: D.Store.alias('ajax'),
+EMD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
+  ajax: EMD.Store.alias('ajax'),
   url: null,
   query: null,
   _model: (function() {
@@ -559,8 +579,20 @@ D.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
     return model.create();
   }).property(),
   model: null,
-  isLoaded: false,
-  isLoading: false,
+  isLoaded: (function(_, set) {
+    if (set !== void 0) {
+      return set;
+    }
+    this._init();
+    return false;
+  }).property(),
+  isLoading: (function(_, set) {
+    if (set !== void 0) {
+      return set;
+    }
+    this._init();
+    return false;
+  }).property(),
   extractMeta: function(rsp) {
     return null;
   },
@@ -573,29 +605,35 @@ D.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
     debugger;
   },
   content: (function(_, set) {
-    if (!this._inited) {
-      this._init();
-    }
     if (set !== void 0) {
       return set;
     }
-    this.urlOrQueryDidChange();
+    this._init();
     return [];
   }).property(),
   _init: function() {
+    if (this._inited) {
+      return;
+    }
     this._inited = true;
     this._setupContent();
-    return this._setupArrangedContent();
+    this._setupArrangedContent();
+    if (!this._initial_content_load) {
+      this._initial_content_load = true;
+      return this.urlOrQueryDidChange();
+    }
   },
   init: function() {
-    return this._inited = false;
+    this._inited = false;
+    return this._initial_content_load = false;
   },
   load: function(fn) {
     if (this.get("isLoaded")) {
       return fn.apply(this);
     }
     this.urlOrQueryDidChange();
-    return this.one("load", this, fn);
+    this.one("load", this, fn);
+    return this;
   },
   reload: function(overrides) {
     if (overrides == null) {
@@ -640,7 +678,7 @@ D.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
     });
   }).observes("query", "url", "_model.link")
 });
-D.RecordArrayPaged = D.RecordArray.extend({
+EMD.RecordArrayPaged = EMD.RecordArray.extend({
   page: (function(_, set) {
     if (set !== void 0) {
       this.reload({
@@ -674,12 +712,9 @@ D.RecordArrayPaged = D.RecordArray.extend({
     });
   }
 });
-D.RecordArrayRelation = D.RecordArray.extend({
+EMD.RecordArrayRelation = EMD.RecordArray.extend({
   _parent: null,
   parent: null,
-  init: function() {
-    return this._super.apply(this, arguments);
-  },
   where: function(opts) {
     var new_query, query;
     if (opts == null) {
@@ -687,7 +722,7 @@ D.RecordArrayRelation = D.RecordArray.extend({
     }
     query = this.get('query');
     new_query = $.extend(query, opts);
-    return D.RecordArrayRelation.create({
+    return EMD.RecordArrayRelation.create({
       _parent: this,
       urlBinding: '_parent.url',
       modelBinding: '_parent.model',
@@ -697,6 +732,16 @@ D.RecordArrayRelation = D.RecordArray.extend({
   nextNew: (function(_, set) {
     return this.create();
   }).property(),
+  then: function(ok, er) {
+    if (ok) {
+      this.one('load', ok);
+    }
+    if (er) {
+      this.one('error', er);
+    }
+    this.get('content');
+    return this;
+  },
   nextNewIsntNew: (function() {
     if (this.get('nextNew.id')) {
       return this.set('nextNew');

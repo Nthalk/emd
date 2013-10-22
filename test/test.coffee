@@ -5,4 +5,4 @@ assert = chai.assert
 describe 'sanity', ->
   it 'dist and libraries should be loaded', ->
     should.exist Em
-    should.exist D
+    should.exist EMD

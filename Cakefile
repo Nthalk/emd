@@ -40,7 +40,7 @@ task 'test', 'test!', (options)->
 
   file = "test/support/index.html" + (if options.grep then '?grep=' + options.grep else '' )
   phantomjs = spawn "phantomjs", [
-    "/usr/local/lib/node_modules/mocha-phantomjs/lib/mocha-phantomjs.coffee"
+    "node_modules/mocha-phantomjs/lib/mocha-phantomjs.coffee"
     file
   ]
   phantomjs.stdout.pipe process.stdout
