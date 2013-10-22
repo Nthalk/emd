@@ -1,4 +1,4 @@
-D.attr = (serialized_name, meta = {})->
+EMD.attr = (serialized_name, meta = {})->
   Em.assert "You must specify a serialized name", meta.serialized_name = serialized_name
 
   key = "_data.#{serialized_name}"
@@ -29,31 +29,38 @@ D.attr = (serialized_name, meta = {})->
 
   property.property.apply(property, property_args).meta(meta)
 
-D.attr.moment = (serialized_name, meta = {})->
+EMD.attr.moment = (serialized_name, meta = {})->
   meta.convertFrom = (date)->
     moment(date) if date
   meta.convertTo = (moment)->
     moment.toDate() if moment
-  D.attr(serialized_name, meta)
+  EMD.attr(serialized_name, meta)
 
-D.attr.duration = (serialized_name, meta = {})->
+EMD.attr.duration = (serialized_name, meta = {})->
   unit = meta.unit ||= 'seconds'
   meta.convertFrom = (unit_value)->
     moment.duration(unit_value,
       unit) unless unit_value == undefined || unit_value == null
   meta.convertTo = (duration)->
     duration.as(unit) if duration
-  D.attr serialized_name, meta
+  EMD.attr serialized_name, meta
 
-D.attr.object = (serialized_name, meta = {})->
+EMD.attr.object = (serialized_name, meta = {})->
   meta.convertFrom = (json)->
     json ||= {} if meta.optional
     Em.ObjectProxy.create content: json
   meta.convertTo = (proxy)->
     proxy.get 'content'
-  D.attr serialized_name, meta
+  EMD.attr serialized_name, meta
 
-D.attr.hasMany = (model_name, meta = {}) ->
+EMD.attr.hasMany = (model_name, meta = {}) ->
+  if typeof model_name == "object"
+    # Support shorthand of: hasMany users: "Pw.User" as hasMany "Pw.User", urlBinding: "links.user"
+    key = Em.keys(model_name)[0]
+    val = model_name[key]
+    model_name = val
+    meta.urlBinding = "links.#{key}"
+
   Em.assert "You must specify model_name for hasMany" unless model_name
   Em.assert "You must specify urlBinding for hasMany" unless meta.urlBinding
 
@@ -63,14 +70,14 @@ D.attr.hasMany = (model_name, meta = {}) ->
       meta.foreign_key ||= "#{Em.get @constructor, 'singular'}_id"
       meta.query[meta.foreign_key] ||= @get 'id'
 
-    D.RecordArrayRelation.create
+    EMD.RecordArrayRelation.create
       parent: @
       modelBinding: model_name
       urlBinding: "parent." + meta.urlBinding
       query: meta.query
   ).property()
 
-D.attr.belongsTo = (serialized_name_to_model_name, meta = {})->
+EMD.attr.belongsTo = (serialized_name_to_model_name, meta = {})->
   Em.assert "You must specify attr_id: 'Assoc.Type' for belongsTo" unless serialized_name_to_model_name instanceof Object
   serialized_name = Em.keys(serialized_name_to_model_name)[0]
   model_name = serialized_name_to_model_name[serialized_name]
@@ -84,4 +91,4 @@ D.attr.belongsTo = (serialized_name_to_model_name, meta = {})->
   meta.convertTo = (model)->
     model.get('id') if model
 
-  D.attr serialized_name, meta
+  EMD.attr serialized_name, meta

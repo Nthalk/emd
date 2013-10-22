@@ -5,24 +5,24 @@ spawn = require('child_process').spawn
 
 option '-g', '--grep [TEST]', 'sets the grep for `cake test`'
 
-data_dist_raw = "dist/emd.js"
-data_dist_min = "dist/emd.min.js"
-data_dist_min_map = "dist/emd.min.js.map"
+emd_dist_raw = "dist/emd.js"
+emd_dist_min = "dist/emd.min.js"
+emd_dist_min_map = "dist/emd.min.js.map"
 test_dist_raw = "dist/emd.test.js"
-data_raw = false
+emd_raw = false
 
 task 'package:raw', 'package the raw distributable', ->
-  return if data_raw
+  return if emd_raw
   env = new mincer.Environment()
   env.appendPath 'src'
-  data_raw = env.findAsset 'data'
-  fs.writeFileSync data_dist_raw, data_raw
+  emd_raw = env.findAsset 'emd'
+  fs.writeFileSync emd_dist_raw, emd_raw
 
 task 'package:min', 'package minified distributable', ->
   invoke 'package:raw'
-  data_min = uglify.minify [data_dist_raw], outSourceMap: data_dist_min_map
-  fs.writeFileSync data_dist_min, data_min.code
-  fs.writeFileSync data_dist_min_map, data_min.map
+  emd_min = uglify.minify [emd_dist_raw], outSourceMap: emd_dist_min_map
+  fs.writeFileSync emd_dist_min, emd_min.code
+  fs.writeFileSync emd_dist_min_map, emd_min.map
 
 task 'package', 'package the distributables', ->
   invoke 'package:min'

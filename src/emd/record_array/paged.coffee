@@ -1,6 +1,6 @@
 #= require ../record_array
 
-D.RecordArrayPaged = D.RecordArray.extend
+EMD.RecordArrayPaged = EMD.RecordArray.extend
   page: ((_, set)->
     if set != undefined
       @reload page: set

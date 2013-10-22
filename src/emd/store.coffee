@@ -1,8 +1,9 @@
-D.Store = Em.Object.extend
+EMD.Store = Em.Object.extend
   _cache: ({})
 
   ajax: (options)->
-    options.accepts ||= "application/json"
+    options.headers ||= {}
+    options.headers.Accept ||= "application/json"
     $.ajax.apply @, arguments
 
   find: (type, id)->
@@ -10,7 +11,7 @@ D.Store = Em.Object.extend
 
     if type.constructor == String
       type = @container.lookup("model:#{type}")
-      Em.assert "Cannot find a record without a valid type", type instanceof D.Model
+      Em.assert "Cannot find a record without a valid type", type instanceof EMD.Model
       type = type.constructor
 
     return record if record = @findCached type, id
@@ -51,16 +52,16 @@ D.Store = Em.Object.extend
     else
       (instance || type.create()).load(data)
 
-D.Store.reopenClass
+EMD.Store.reopenClass
   alias: (method)->
     ->
-      store = Em.get D, "defaultStore"
+      store = Em.get EMD, "defaultStore"
       args = [].slice.call arguments
       store[method].apply store, args
 
   aliasWithThis: (method)->
     ->
-      store = Em.get D, "defaultStore"
+      store = Em.get EMD, "defaultStore"
       args = [].slice.call arguments
       args.unshift(@)
       store[method].apply store, args

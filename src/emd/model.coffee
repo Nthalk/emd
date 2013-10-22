@@ -2,7 +2,7 @@
 
 ########################################################
 #
-D.Model = Em.Object.extend Em.Evented,
+EMD.Model = Em.Object.extend Em.Evented,
 ########################################################
 # The root link to this item
   link: null
@@ -35,12 +35,12 @@ D.Model = Em.Object.extend Em.Evented,
     "#{@constructor}(#{@get 'id' })"
 
 ########################################################
-# Default Properties
-  id: D.attr 'id', readonly: true
-  created: D.attr.moment 'created_at', readonly: true, optional: true
-  updated: D.attr.moment 'updated_at', readonly: true, optional: true
-  errors: D.attr 'errors', readonly: true, optional: true
-  links: D.attr.object 'links', readonly: true, optional: true
+# EMDefault Properties
+  id: EMD.attr 'id', readonly: true
+  created: EMD.attr.moment 'created_at', readonly: true, optional: true
+  updated: EMD.attr.moment 'updated_at', readonly: true, optional: true
+  errors: EMD.attr 'errors', readonly: true, optional: true
+  links: EMD.attr.object 'links', readonly: true, optional: true
 
 ########################################################
 # Changers
@@ -50,7 +50,7 @@ D.Model = Em.Object.extend Em.Evented,
 
 ########################################################
 # URL, often a combination of link/id
-  url: D.attr 'url',
+  url: EMD.attr 'url',
     readonly: true
     extra_keys: ['id', 'link']
     if_null: ->
@@ -61,9 +61,16 @@ D.Model = Em.Object.extend Em.Evented,
 ########################################################
 # Our ghetto promise interface
   then: (ok, er)->
+    # Model is already loaded
     return ok(@) if @get 'isLoaded'
+
+    # Model is new, return it
+    return ok(@) unless @get 'id'
+
+    # All other cases
     @one 'load', ok
-    @reload() unless @get 'isLoading'
+    @reload()
+
 
 ########################################################
 # Serialization
@@ -154,7 +161,7 @@ D.Model = Em.Object.extend Em.Evented,
       unless @get "link"
         console.log "deferring"
         @addObserver "link", @, ->
-          @save().then(ok,er)
+          @save().then(ok, er)
       else
         console.log "saving"
         Em.assert "Cannot save without a link or url", url = @get "url"
@@ -183,11 +190,11 @@ D.Model = Em.Object.extend Em.Evented,
 
 ########################################################
 #
-D.Model.reopenClass
-  find: D.Store.aliasWithThis 'find'
-  cache: D.Store.aliasWithThis 'cache'
-  load: D.Store.aliasWithThis 'load'
-  ajax: D.Store.alias 'ajax'
+EMD.Model.reopenClass
+  find: EMD.Store.aliasWithThis 'find'
+  cache: EMD.Store.aliasWithThis 'cache'
+  load: EMD.Store.aliasWithThis 'load'
+  ajax: EMD.Store.alias 'ajax'
 
   _beforeLoad: (data)->
     @_needsBeforeLoad = false
@@ -223,8 +230,18 @@ D.Model.reopenClass
     @toString().split(".").pop().underscore()
   ).property()
 
+  pluralizer: (->
+    # Support for inflector
+    if Inflector != undefined
+      (model)->
+        name = model.toString().split('.').pop().underscore()
+        Inflector.pluralize(name)
+  ).property()
+
   plural: (->
-    Em.assert "Please define a plural plural: 'plural' for #{@constructor}"
+    if pluralize = Em.get @, "pluralizer"
+      return pluralize @
+    Em.assert "Please define a plural plural: 'plural' for #{@constructor} or register a pluralizer with EMD.Model.set('pluralizer', ((model)->'models')"
   ).property "singular"
 
   fromJson: (data, instance)->

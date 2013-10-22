@@ -1,6 +1,6 @@
-D.RecordArray = Em.ArrayProxy.extend Em.Evented,
+EMD.RecordArray = Em.ArrayProxy.extend Em.Evented,
 
-  ajax: D.Store.alias 'ajax'
+  ajax: EMD.Store.alias 'ajax'
 
   url: null
   query: null
@@ -12,8 +12,17 @@ D.RecordArray = Em.ArrayProxy.extend Em.Evented,
 
   model: null
 
-  isLoaded: false
-  isLoading: false
+  isLoaded: ((_, set)->
+    return set if set != undefined
+    @_init()
+    false
+  ).property()
+
+  isLoading: ((_, set)->
+    return set if set != undefined
+    @_init()
+    false
+  ).property()
 
   extractMeta: (rsp)->
     null
@@ -26,24 +35,29 @@ D.RecordArray = Em.ArrayProxy.extend Em.Evented,
     debugger
 
   content: ((_, set)->
-    @_init() unless @_inited
     return set if set != undefined
-    @urlOrQueryDidChange()
+    @_init()
     []
   ).property()
 
   _init: ->
+    return if @_inited
     @_inited = true
     @_setupContent()
     @_setupArrangedContent()
+    unless @_initial_content_load
+      @_initial_content_load = true
+      @urlOrQueryDidChange()
 
   init: ->
     @_inited = false
+    @_initial_content_load = false
 
   load: (fn)->
     return fn.apply this if @get "isLoaded"
     @urlOrQueryDidChange()
     @one "load", @, fn
+    @
 
   reload: (overrides = {})->
     @set "query", $.extend({}, @get("query"), overrides)
