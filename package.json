@@ -6,6 +6,9 @@
     "coffee-script": "*",
     "mincer": "*",
     "uglify-js": "*",
-    "mocha-phantomjs": "*"
+    "mocha-phantomjs": "*",
+    "livereload": "*",
+    "watch": "*",
+    "connect": "*"
   }
 }

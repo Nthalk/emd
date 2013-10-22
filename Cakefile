@@ -34,11 +34,32 @@ task 'package:test', 'package tests', ->
   test_raw = env.findAsset 'test'
   fs.writeFileSync test_dist_raw, test_raw
 
+task 'test:server', 'run tests', ->
+  invoke 'package:test'
+
+  watch = require "watch"
+  watch.watchTree "#{__dirname}/src", ->
+    invoke 'package:test'
+  watch.watchTree "#{__dirname}/test", ->
+    invoke 'package:test'
+
+  livereload = require 'livereload'
+  reloader = livereload.createServer port: 4001
+  reloader.watch "#{__dirname}/support"
+  reloader.watch "#{__dirname}/dist"
+
+  connect = require('connect');
+  server = connect.createServer()
+  server.use connect.static("#{__dirname}/support")
+  server.use connect.static("#{__dirname}/dist")
+  server.listen 4000
+  require('child_process').spawn "open", ["http://localhost:4000/index.html"]
+
 
 task 'test', 'test!', (options)->
   invoke 'package:test'
 
-  file = "test/support/index.html" + (if options.grep then '?grep=' + options.grep else '' )
+  file = "support/index.html" + (if options.grep then '?grep=' + options.grep else '' )
   phantomjs = spawn "phantomjs", [
     "node_modules/mocha-phantomjs/lib/mocha-phantomjs.coffee"
     file

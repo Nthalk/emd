@@ -6,24 +6,26 @@
 <body>
 <div id="mocha"></div>
 
+<script src="http://localhost:4001/livereload.js"></script>
+
 <script src="lib/moment.js"></script>
 <script src="lib/jquery-1.10.2.js"></script>
 <script src="lib/handlebars.js"></script>
 <script src="lib/ember.js"></script>
 
 <script src="mocha.js"></script>
-<script src="chai.js"></script>
-<script src="sinon-chai.js"></script>
-<script src="sinon-1.7.3.js"></script>
-
+<script src="expect.js"></script>
 
 <script>
     mocha.ui('bdd');
     mocha.reporter('html');
 </script>
 
-<script src="../../dist/emd.js"></script>
-<script src="../../dist/emd.test.js"></script>
+<script src="../dist/emd.js"></script>
+<script src="../dist/emd.test.js"></script>
+
+<script src="emd.js"></script>
+<script src="emd.test.js"></script>
 
 <script>
     if (window.mochaPhantomJS) {
