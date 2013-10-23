@@ -8,13 +8,13 @@ Prescribed Format
 
 The typical (coffee) JSON format that I would suggest looks like this:
 
-    modelname:
-      url: "/link/to/resource/route"
-      id: modelid
+    model_name:
+      url: "/link/to/resource/route"    # Required
+      id: modelid                       # Required
       under_score_names: "with values!"
-      created_at: "date string"
-      errors: {key: ["problem"]}
-      links:
+      created_at: "date string"         # Optional
+      errors: {key: ["problem"]}        # Optional
+      links:                            # Recommended
         relatedmodel: "/link/to/related/model?with=relevant&conditions"
 
 Prescribed API Structure
@@ -36,16 +36,16 @@ Example?
 
 Here is the coffee script to deal with the above api structure
 
-    App.Api = D.Model.extend
+    App.Api = EMD.Model.extend
       url: "/api"
-      users: D.hasMany 'App.User', urlBinding: 'links.users'
-      articles: D.hasMany 'App.Article', urlBinding: 'links.articles'
-      comments: D.hasMany 'App.Comment', urlBinding: 'links.comments'
+      users: EMD.hasMany 'App.User', urlBinding: 'links.users'
+      articles: EMD.hasMany articles: 'App.Article'
+      comments: EMD.hasMany 'App.Comment', urlBinding: 'links.comments'
 
-    App.User = D.Model.extend
-      email: D.attr "email"
-      phoneNumber: D.attr "phone_number"
-      comments: D.hasMany 'App.Comment', urlBinding: 'links.comments'
+    App.User = EMD.Model.extend
+      email: EMD.attr "email"
+      phoneNumber: EMD.attr "phone_number"
+      comments: EMD.hasMany 'App.Comment', urlBinding: 'links.comments'
 
     api = App.Api.create()
     users = api.get "users"
@@ -66,11 +66,12 @@ Attribute Types
 
 Currently there is support for
 
-    D.attr.belongsTo foreign_key: 'Parent.Model'
-    D.attr.hasMany 'Child.Model', urlBinding: 'link.children'
-    D.attr.moment 'key_name'
-    D.attr 'key_name'
-    D.attr.object 'key_name'
+    EMD.attr.belongsTo foreign_key: 'Parent.Model'
+    EMD.attr.hasMany 'Child.Model', urlBinding: 'link.children' # Which is the same as
+    EMD.attr.hasMany children: 'Child.Model'
+    EMD.attr.moment 'key_name'
+    EMD.attr 'key_name'
+    EMD.attr.object 'key_name'
 
 
 Links and Urls?
@@ -98,9 +99,8 @@ They can also be used to create new models.
 Testing
 ----
 
-    brew install phantomjs
-    npm install -g coffee-script
     npm install
-    cake test
+    cake test         # Headless
+    cake test:server  # Livereload
 
 Pull requests are welcome!
