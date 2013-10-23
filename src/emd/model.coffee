@@ -1,11 +1,60 @@
+#<!--
 # = require ./store
+#-->
 
-########################################################
 #
+# Models are collections of attributes, that can be persisted via HTTP methods
+# on a specified path or `link`.
+#
+# Basic Usage
+# ----
+#
+# Creating a model that maps the following json document:
+#
+#     user:
+#       id: 1
+#       name: "Carl"
+#       email_address: "carl@yay.com"
+#
+# Located at `/api/users/1`
+#
+# Add a link property to your application for the model:
+#
+#     App = Em.Application.create
+#       userLink: "/api/users"
+#
+# Define the model class:
+#
+#     App.User = EMD.Model.extend
+#       linkBinding: "App.userLink"
+#       name: EMD.attr "name"
+#       emailAddress: EMD.attr "email_address"
+#
+# And then use it in your application:
+#
+#     u = App.User.find 1
+#     u.get "name"          => "carl"
+#     u.get "emailAddress"  => "carl@yay.com"
+#     u.get "link"          => "/api/users"
+#     u.get "url"           => "/api/users/1"
+#
+# Annotated source
+# ----
 EMD.Model = Em.Object.extend Em.Evented,
-########################################################
-# The root link to this item
+# Link
+# ----
+# The `link` property  defines the resource path for __all__ models of a type.
+#
+# For example, all `App.User` models would share a `link` like `/api/users`
+#
+# The link is special because it defines the basic path for retrieving,
+# creating, updating, and deleting models.
+#
+# When the `link` changes, all models of that type reload. All record arrays
+# that use that type as a base reload.
+#
   link: null
+
   linkChange: ->
     link = @get 'link'
     cachebust = "_cacheBust=#{new Date().getTime()}"
@@ -20,36 +69,15 @@ EMD.Model = Em.Object.extend Em.Evented,
     @set 'link', link
 
   linkDidChange: (->
-    # Prevent double loading, but reload if the link
-    # suddenly becomes available
     @reload() unless @get "isLoaded"
   ).observes "link"
 
-########################################################
-# The remote json object
-  _data: (->
-    Em.Object.create()
-  ).property()
-
-  toString: ->
-    "#{@constructor}(#{@get 'id' })"
-
-########################################################
-# EMDefault Properties
-  id: EMD.attr 'id', readonly: true
-  created: EMD.attr.moment 'created_at', readonly: true, optional: true
-  updated: EMD.attr.moment 'updated_at', readonly: true, optional: true
-  errors: EMD.attr 'errors', readonly: true, optional: true
-  links: EMD.attr.object 'links', readonly: true, optional: true
-
-########################################################
-# Changers
-  idDidChange: (->
-    @constructor.cache(@)
-  ).observes("id")
-
-########################################################
-# URL, often a combination of link/id
+# Url
+# ---
+# The `url` property is different than the link in that it is the link with
+# the model's `id` property appended to it.
+#
+# See [EMD.attr](attr.html) for more documentation on `EMD.attr`.
   url: EMD.attr 'url',
     readonly: true
     extra_keys: ['id', 'link']
@@ -58,22 +86,36 @@ EMD.Model = Em.Object.extend Em.Evented,
       return link unless id = @get("id") or id == null
       "#{link}/#{id}"
 
-########################################################
-# Our ghetto promise interface
+# Id
+# ---
+# This is id of the object, it is set to readonly because it is present in the
+# url that actions are performed on.
+#
+# For example, `App.User.find(1).get("url")` would return `/api/users/1`.
+#
+# When the id changes and becomes present, the record is cached in the store
+# cache.
+#
+  id: EMD.attr 'id', readonly: true
+
+  idDidChange: (->
+    @constructor.cache(@)
+  ).observes("id")
+
+# then
+# ---
+# This is a ghetto promise interface, it allows this model to behave
+# asynchronously with EmberJS's routing system as well as providing a helper
+# for telling when the model is loaded or if it already is
   then: (ok, er)->
-    # Model is already loaded
     return ok(@) if @get 'isLoaded'
-
-    # Model is new, return it
     return ok(@) unless @get 'id'
-
-    # All other cases
     @one 'load', ok
     @reload()
 
+  toString: ->
+    "#{@constructor}(#{@get 'id' })"
 
-########################################################
-# Serialization
   toJson: ->
     props = {}
     @constructor.eachComputedProperty (name, meta)=>
@@ -84,25 +126,31 @@ EMD.Model = Em.Object.extend Em.Evented,
         props[serialized_name] = value if value != undefined
     props
 
-########################################################
-# States
-  isDeleted: false
-  isLoading: false
-  isLoaded: false
-  isNew: (->return @get('id') == undefined).property 'id'
-  isDirty: ((_, set)->
-    return set if set != undefined
-    return false if @get "id"
-    true
-  ).property "id"
 
-########################################################
-# Loading data from the server
+
+# _data
+# ----
+# The `_data` object is where the data from the server is stored.
+  _data: (->
+    Em.Object.create()
+  ).property()
+
+# ajax
+# ----
+# Here we defer our ajax to our constructor, which allows each model to
+# override it's ajax method.
   ajax: ->
     @constructor.ajax.apply @, arguments
 
+# load
+# ----
+# This forcefully injects json ito the `_data` field and extracts
+# errors that the developer should see.
+#
+# If the json document has a `errors` object in it, the errors will be logged
+# to the console and available on the model.
+#
   load: (data)->
-    return @one 'load', @, data if typeof data == 'function'
     Em.assert "Load with no data?", typeof data == 'object'
 
     if data.errors
@@ -124,9 +172,9 @@ EMD.Model = Em.Object.extend Em.Evented,
     @trigger 'load', @
     @
 
-  cancel: ->
-    @reload()
-
+# reload
+# ----
+# If the model has an id, it triggers a fetch from the server.
   reload: ->
     id = @get("id")
     return @ if id == undefined
@@ -142,8 +190,6 @@ EMD.Model = Em.Object.extend Em.Evented,
         @constructor.fromJson(ok, @)
       error: (err)=>
         debugger
-
-    @
 
   delete: ->
     if @get("id")
@@ -188,8 +234,24 @@ EMD.Model = Em.Object.extend Em.Evented,
           error: (rsp)->
             er(rsp)
 
-########################################################
-#
+  isDeleted: false
+  isLoading: false
+  isLoaded: false
+  isNew: (->return @get('id') == undefined).property 'id'
+  isDirty: ((_, set)->
+    return set if set != undefined
+    return false if @get "id"
+    true
+  ).property "id"
+
+
+  created: EMD.attr.moment 'created_at', readonly: true, optional: true
+  updated: EMD.attr.moment 'updated_at', readonly: true, optional: true
+  errors: EMD.attr 'errors', readonly: true, optional: true
+  links: EMD.attr.object 'links', readonly: true, optional: true
+
+# Model class methods and properties
+# ----
 EMD.Model.reopenClass
   find: EMD.Store.aliasWithThis 'find'
   cache: EMD.Store.aliasWithThis 'cache'
@@ -226,24 +288,6 @@ EMD.Model.reopenClass
       attributes[name] = meta if serialized_name = meta.serialized_name
     attributes
 
-  singular: (->
-    @toString().split(".").pop().underscore()
-  ).property()
-
-  pluralizer: (->
-    # Support for inflector
-    if Inflector != undefined
-      (model)->
-        name = model.toString().split('.').pop().underscore()
-        Inflector.pluralize(name)
-  ).property()
-
-  plural: (->
-    if pluralize = Em.get @, "pluralizer"
-      return pluralize @
-    Em.assert "Please define a plural plural: 'plural' for #{@constructor} or register a pluralizer with EMD.Model.set('pluralizer', ((model)->'models')"
-  ).property "singular"
-
   fromJson: (data, instance)->
     # Try to load singular
     singular = Em.get(@, "singular")
@@ -258,3 +302,32 @@ EMD.Model.reopenClass
 
   create: (config)->
     @_super().setProperties config
+
+# Inflection
+# ----
+# The singular is often derivable by the class name, however, the plural is more
+# difficult.
+#
+# There is default support for the inflector found here
+# [http://msnexploder.github.io/inflect/](http://msnexploder.github.io/inflect/).
+#
+# Or you can add your own: `EMD.Model.set 'pluralizer', (model)-> model.toString().split('.').pop().underscore() + "s"`
+#
+  singular: (->
+    @toString().split(".").pop().underscore()
+  ).property()
+
+  pluralizer: (->
+    if inflect != undefined
+      (model)->
+        name = model.toString().split('.').pop().underscore()
+        inflect.pluralize(name)
+  ).property()
+
+  plural: (->
+    if pluralize = Em.get @, "pluralizer"
+      return pluralize @
+    Em.assert "Please define a plural plural: 'plural' for #{@constructor} or register a pluralizer with EMD.Model.set('pluralizer', ((model)->'models')"
+  ).property "singular"
+
+

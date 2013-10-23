@@ -35,13 +35,15 @@ task 'package:test', 'package tests', ->
   fs.writeFileSync test_dist_raw, test_raw
 
 task 'test:server', 'run tests', ->
-  invoke 'package:test'
-
+  test = ->
+    invoke 'package:test'
   watch = require "watch"
-  watch.watchTree "#{__dirname}/src", ->
-    invoke 'package:test'
-  watch.watchTree "#{__dirname}/test", ->
-    invoke 'package:test'
+  watch.watchTree "#{__dirname}",
+    filter: (file)->
+      return false if file.indexOf("#{__dirname}/src") == 0
+      return false if file.indexOf("#{__dirname}/test") == 0
+      true
+    test
 
   livereload = require 'livereload'
   reloader = livereload.createServer port: 4001
@@ -59,9 +61,9 @@ task 'test:server', 'run tests', ->
 task 'test', 'test!', (options)->
   invoke 'package:test'
 
-  file = "support/index.html" + (if options.grep then '?grep=' + options.grep else '' )
+  file = "#{__dirname}/support/index.html" + (if options.grep then '?grep=' + options.grep else '' )
   phantomjs = spawn "phantomjs", [
-    "node_modules/mocha-phantomjs/lib/mocha-phantomjs.coffee"
+    "#{__dirname}/node_modules/mocha-phantomjs/lib/mocha-phantomjs.coffee"
     file
   ]
   phantomjs.stdout.pipe process.stdout
@@ -70,4 +72,36 @@ task 'test', 'test!', (options)->
     if (code == 127)
       print "Perhaps phantomjs is not installed?\n"
     process.exit code
+
+task 'build', 'build', ->
+  invoke 'package:test'
+  invoke 'doc'
+
+task 'watch', 'watch', ->
+  watch = require "watch"
+  build = ->
+    invoke 'build'
+  watch.watchTree "#{__dirname}",
+    filter: (file)->
+      return false if file.indexOf("#{__dirname}/src") == 0
+      return false if file.indexOf("#{__dirname}/test") == 0
+      return false if file.indexOf("#{__dirname}/example") == 0
+      true
+    build
+
+task 'doc', 'generate documentation', ->
+  fs = require 'fs'
+  walk = (dir, ret = [])->
+    for file in fs.readdirSync dir
+      try
+        walk "#{dir}/#{file}", ret
+      catch e
+        ret.push "#{dir}/#{file}"
+    ret
+
+  require('child_process').spawn "#{__dirname}/node_modules/docco/bin/docco", [
+    "--output", "#{__dirname}/doc"
+    "--layout", "linear"
+  ].concat walk("#{__dirname}/src").concat walk("#{__dirname}/examples")
+
 

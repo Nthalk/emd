@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>store.coffee</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="public/stylesheets/normalize.css" />
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="page">
+
+      <div class="header">
+        
+          <h1>store.coffee</h1>
+        
+
+        
+          <div class="toc">
+            <h3>Table of Contents</h3>
+            <ol>
+              
+                
+                <li>
+                  <a class="source" href="example-app.html">
+                    example-app.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="emd.html">
+                    emd.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="attr.html">
+                    attr.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="belongs_to.html">
+                    belongs_to.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="has_many.html">
+                    has_many.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="moment.html">
+                    moment.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="object.html">
+                    object.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="initializer.html">
+                    initializer.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="model.html">
+                    model.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="record_array.html">
+                    record_array.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="paged.html">
+                    paged.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="relation.html">
+                    relation.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="store.html">
+                    store.coffee
+                  </a>
+                </li>
+              
+            </ol>
+          </div>
+        
+      </div>
+
+      
+        
+        
+        
+          <div class='highlight'><pre>
+EMD.Store = Em.Object.extend
+  _cache: ({})
+
+  ajax: (options)-&gt;
+    options.headers ||= {}
+    options.headers.Accept ||= <span class="string">"application/json"</span>
+    $.ajax.apply @, arguments
+
+  find: (type, id)-&gt;
+    Em.assert <span class="string">"Cannot find a record without an id"</span>, id <span class="keyword">or</span> id == <span class="literal">null</span>
+
+    <span class="keyword">if</span> type.constructor == String
+      type = <span class="property">@container</span>.lookup(<span class="string">"model:<span class="subst">#{type}</span>"</span>)
+      Em.assert <span class="string">"Cannot find a record without a valid type"</span>, type <span class="keyword">instanceof</span> EMD.Model
+      type = type.constructor
+
+    <span class="keyword">return</span> record <span class="keyword">if</span> record = <span class="property">@findCached</span> type, id
+    record = <span class="property">@load</span>(type, id: id, <span class="literal">null</span>, <span class="literal">true</span>)
+    record.reload()
+    record
+
+  cache: (type, object)-&gt;
+    type_cache = <span class="property">@_cache</span>[type] ||= {}
+    <span class="keyword">return</span> <span class="keyword">unless</span> id = object.get(<span class="string">"id"</span>)
+    <span class="keyword">if</span> existing = type_cache[id]
+      <span class="keyword">return</span> <span class="keyword">if</span> existing == object
+      type_cache[id].set <span class="string">'content'</span>, object
+    <span class="keyword">else</span>
+      type_cache[id] = object
+
+  findCached: (type, id)-&gt;
+    Em.assert <span class="string">"Cannot find <span class="subst">#{type}</span> without an id"</span>, id <span class="keyword">or</span> id == <span class="literal">null</span>
+    type_cache = <span class="property">@_cache</span>[type] ||= {}
+    type_cache[id]
+
+  load: (type, data, instance, just_id)-&gt;
+    <span class="keyword">if</span> data.errors
+      <span class="keyword">for</span> key, value <span class="keyword">of</span> data.errors
+        Em.warn <span class="string">"<span class="subst">#{key}</span> <span class="subst">#{value.join("<span class="keyword">and</span>")}</span>"</span>
+
+    <span class="keyword">if</span> data.id || data.id == <span class="literal">null</span>
+      cached = <span class="property">@findCached</span>(type, data.id)
+      <span class="keyword">return</span> cached <span class="keyword">if</span> just_id <span class="keyword">and</span> cached
+
+      type_cache = <span class="property">@_cache</span>[type] ||= {}
+      record = (instance || type.create())
+      <span class="keyword">if</span> just_id
+        record.set(<span class="string">"id"</span>, data.id)
+      <span class="keyword">else</span>
+        record.load(data)
+      type_cache[data.id] = record
+    <span class="keyword">else</span>
+      (instance || type.create()).load(data)
+
+EMD.Store.reopenClass
+  alias: (method)-&gt;
+    -&gt;
+      store = Em.get EMD, <span class="string">"defaultStore"</span>
+      args = [].slice.call arguments
+      store[method].apply store, args
+
+  aliasWithThis: (method)-&gt;
+    -&gt;
+      store = Em.get EMD, <span class="string">"defaultStore"</span>
+      args = [].slice.call arguments
+      args.unshift(@)
+      store[method].apply store, args</pre></div>
+        
+      
+      <div class="fleur">h</div>
+    </div>
+  </div>
+</body>
+</html>

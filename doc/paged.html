@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>paged.coffee</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="public/stylesheets/normalize.css" />
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="page">
+
+      <div class="header">
+        
+          <h1>paged.coffee</h1>
+        
+
+        
+          <div class="toc">
+            <h3>Table of Contents</h3>
+            <ol>
+              
+                
+                <li>
+                  <a class="source" href="example-app.html">
+                    example-app.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="emd.html">
+                    emd.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="attr.html">
+                    attr.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="belongs_to.html">
+                    belongs_to.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="has_many.html">
+                    has_many.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="moment.html">
+                    moment.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="object.html">
+                    object.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="initializer.html">
+                    initializer.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="model.html">
+                    model.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="record_array.html">
+                    record_array.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="paged.html">
+                    paged.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="relation.html">
+                    relation.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="store.html">
+                    store.coffee
+                  </a>
+                </li>
+              
+            </ol>
+          </div>
+        
+      </div>
+
+      
+        
+        <p>= require ../record_array</p>
+
+        
+          <div class='highlight'><pre>EMD.RecordArrayPaged = EMD.RecordArray.extend
+  page: ((_, set)-&gt;
+    <span class="keyword">if</span> set != <span class="literal">undefined</span>
+      <span class="property">@reload</span> page: set
+      set
+    <span class="keyword">else</span>
+      <span class="property">@get</span>(<span class="string">"query.page"</span>) || <span class="number">1</span>
+  ).property(<span class="string">"query.page"</span>)
+
+  totalRecords: <span class="literal">null</span>
+  totalPages: <span class="literal">null</span>
+  perPage: <span class="literal">null</span>
+  nextPageUrl: <span class="literal">null</span>
+  previousPageUrl: <span class="literal">null</span>
+  hasNextPageBinding: <span class="string">"nextPageUrl"</span>
+  hasPreviousPageBinding: <span class="string">"previousPageUrl"</span>
+
+  nextPage: -&gt;
+    <span class="property">@set</span> <span class="string">"url"</span>, <span class="property">@get</span>(<span class="string">"nextPageUrl"</span>)
+
+  previousPage: -&gt;
+    <span class="property">@set</span> <span class="string">"url"</span>, <span class="property">@get</span>(<span class="string">"previousPageUrl"</span>)
+
+  extractMeta: (rsp)-&gt;
+    <span class="property">@setProperties</span>
+      perPage: rsp.meta.per_page
+      totalRecords: rsp.meta.total_records
+      totalPages: rsp.meta.total_pages
+      nextPageUrl: rsp.links.next_page
+      previousPageUrl: rsp.links.previous_page</pre></div>
+        
+      
+      <div class="fleur">h</div>
+    </div>
+  </div>
+</body>
+</html>

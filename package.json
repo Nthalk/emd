@@ -1,5 +1,5 @@
 {
-  "name": "ember-d",
+  "name": "emd",
   "version": "0.1.0",
   "author": "Nthalk <carl@etaylor.me>",
   "dependencies": {
@@ -9,6 +9,7 @@
     "mocha-phantomjs": "*",
     "livereload": "*",
     "watch": "*",
-    "connect": "*"
+    "connect": "*",
+    "docco":"*"
   }
 }

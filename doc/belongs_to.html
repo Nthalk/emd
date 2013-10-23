@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>belongs_to.coffee</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="public/stylesheets/normalize.css" />
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="page">
+
+      <div class="header">
+        
+          <h1>belongs_to.coffee</h1>
+        
+
+        
+          <div class="toc">
+            <h3>Table of Contents</h3>
+            <ol>
+              
+                
+                <li>
+                  <a class="source" href="example-app.html">
+                    example-app.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="emd.html">
+                    emd.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="attr.html">
+                    attr.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="belongs_to.html">
+                    belongs_to.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="has_many.html">
+                    has_many.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="moment.html">
+                    moment.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="object.html">
+                    object.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="initializer.html">
+                    initializer.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="model.html">
+                    model.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="record_array.html">
+                    record_array.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="paged.html">
+                    paged.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="relation.html">
+                    relation.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="store.html">
+                    store.coffee
+                  </a>
+                </li>
+              
+            </ol>
+          </div>
+        
+      </div>
+
+      
+        
+        
+        
+          <div class='highlight'><pre>EMD.attr.<span class="function"><span class="title">belongsTo</span></span> = (serialized_name_to_model_name, meta = {})-&gt;
+  Em.assert <span class="string">"You must specify attr_id: 'Assoc.Type' for belongsTo"</span> <span class="keyword">unless</span> serialized_name_to_model_name <span class="keyword">instanceof</span> Object
+  serialized_name = Em.keys(serialized_name_to_model_name)[<span class="number">0</span>]
+  model_name = serialized_name_to_model_name[serialized_name]
+  meta.typeString = model_name
+  raw_type = <span class="literal">null</span>
+
+  meta.<span class="function"><span class="title">convertFrom</span></span> = (id)-&gt;
+    raw_type = meta.type = Em.get model_name <span class="keyword">unless</span> raw_type
+    raw_type.find(id) <span class="keyword">if</span> id
+
+  meta.<span class="function"><span class="title">convertTo</span></span> = (model)-&gt;
+    model.get(<span class="string">'id'</span>) <span class="keyword">if</span> model
+
+  EMD.attr serialized_name, meta</pre></div>
+        
+      
+      <div class="fleur">h</div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,3 +1,4 @@
+
 EMD.Store = Em.Object.extend
   _cache: ({})
 

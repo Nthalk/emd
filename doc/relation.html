@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>relation.coffee</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="public/stylesheets/normalize.css" />
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="page">
+
+      <div class="header">
+        
+          <h1>relation.coffee</h1>
+        
+
+        
+          <div class="toc">
+            <h3>Table of Contents</h3>
+            <ol>
+              
+                
+                <li>
+                  <a class="source" href="example-app.html">
+                    example-app.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="emd.html">
+                    emd.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="attr.html">
+                    attr.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="belongs_to.html">
+                    belongs_to.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="has_many.html">
+                    has_many.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="moment.html">
+                    moment.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="object.html">
+                    object.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="initializer.html">
+                    initializer.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="model.html">
+                    model.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="record_array.html">
+                    record_array.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="paged.html">
+                    paged.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="relation.html">
+                    relation.coffee
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="store.html">
+                    store.coffee
+                  </a>
+                </li>
+              
+            </ol>
+          </div>
+        
+      </div>
+
+      
+        
+        <p>= require ../record_array</p>
+
+        
+          <div class='highlight'><pre>EMD.RecordArrayRelation = EMD.RecordArray.extend
+  _parent: <span class="literal">null</span>
+  parent: <span class="literal">null</span>
+
+  where: (opts = {})-&gt;
+    query = <span class="property">@get</span> <span class="string">'query'</span>
+    new_query = $.extend query, opts
+
+    EMD.RecordArrayRelation.create
+      _parent: @
+      urlBinding: <span class="string">'_parent.url'</span>
+      modelBinding: <span class="string">'_parent.model'</span>
+      query: new_query
+
+  nextNew: ((_, set)-&gt;
+    <span class="property">@create</span>()
+  ).property()
+
+  <span class="keyword">then</span>: (ok, er)-&gt;
+    <span class="property">@one</span> <span class="string">'load'</span>, ok <span class="keyword">if</span> ok
+    <span class="property">@one</span> <span class="string">'error'</span>, er <span class="keyword">if</span> er
+    <span class="property">@get</span> <span class="string">'content'</span>
+    @
+
+  nextNewIsntNew: (-&gt;
+    <span class="property">@set</span> <span class="string">'nextNew'</span> <span class="keyword">if</span> <span class="property">@get</span> <span class="string">'nextNew.id'</span>
+  ).observes <span class="string">'nextNew.id'</span>
+
+  create: (opts = {})-&gt;
+    model = <span class="property">@get</span> <span class="string">'model'</span>
+    query = <span class="property">@get</span> <span class="string">'query'</span>
+    model.create $.extend query, opts</pre></div>
+        
+      
+      <div class="fleur">h</div>
+    </div>
+  </div>
+</body>
+</html>

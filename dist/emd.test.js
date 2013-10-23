@@ -25,7 +25,15 @@ describe('attr.belongsTo', function() {
 
 ;
 describe('Model', function() {
+  ({
+    beforeEach: setup
+  });
   return it('Model should exist', function() {
-    return expect(EMD.Model).to.be.an('function');
+    expect(EMD.Model).to.be.a('function');
+    return App.User = EMD.Model.extend({
+      name: EMD.attr("name"),
+      emailAddress: EMD.attr("email_address"),
+      preferences: EMD.attr.object("preferences")
+    });
   });
 });
