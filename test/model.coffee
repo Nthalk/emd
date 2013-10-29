@@ -1,6 +1,7 @@
 describe 'Model', ->
   beforeEach: setup
   it 'Model should exist', ->
+    console.log "yay"
     expect(EMD.Model).to.be.a('function')
     App.User = EMD.Model.extend
       name: EMD.attr "name"

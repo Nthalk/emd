@@ -1,4 +1,9 @@
 describe 'attr.belongsTo', ->
   beforeEach setup
-  it 'Should have shorthand definition', ->
+  it 'should have shorthand definition', ->
     expect(EMD.attr.hasMany).to.be.an('function')
+
+  it 'should load', ->
+    App.Parent = EMD.Model.extend ->
+      children: EMD.has
+

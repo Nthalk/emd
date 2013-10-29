@@ -99,6 +99,8 @@ They can also be used to create new models.
 Testing
 ----
 
+
+    npm install -g cake
     npm install
     cake test         # Headless
     cake test:server  # Livereload

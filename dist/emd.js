@@ -300,9 +300,6 @@ EMD.Model = Em.Object.extend(Em.Evented, {
       return "" + link + "/" + id;
     }
   }),
-  _data: (function() {
-    return Em.Object.create();
-  }).property(),
   id: EMD.attr('id', {
     readonly: true
   }),
@@ -343,6 +340,9 @@ EMD.Model = Em.Object.extend(Em.Evented, {
     });
     return props;
   },
+  _data: (function() {
+    return Em.Object.create();
+  }).property(),
   ajax: function() {
     return this.constructor.ajax.apply(this, arguments);
   },
@@ -480,6 +480,16 @@ EMD.Model.reopenClass({
   cache: EMD.Store.aliasWithThis('cache'),
   load: EMD.Store.aliasWithThis('load'),
   ajax: EMD.Store.alias('ajax'),
+  extend: function() {
+    var args;
+    args = Array.prototype.slice.call(arguments);
+    args = $.map(args, function(arg) {
+      if (arg instanceof Function) {
+        return console.log(arg);
+      }
+    });
+    return this._super.apply(this, args);
+  },
   _beforeLoad: function(data) {
     var attributes, has_serialized_keys, property_keys, serialized_keys, shown_data,
       _this = this;
@@ -542,11 +552,11 @@ EMD.Model.reopenClass({
     return this.toString().split(".").pop().underscore();
   }).property(),
   pluralizer: (function() {
-    if (Inflector !== void 0) {
+    if (inflect !== void 0) {
       return function(model) {
         var name;
         name = model.toString().split('.').pop().underscore();
-        return Inflector.pluralize(name);
+        return inflect.pluralize(name);
       };
     }
   }).property(),

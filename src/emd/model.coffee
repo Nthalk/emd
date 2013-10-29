@@ -258,6 +258,13 @@ EMD.Model.reopenClass
   load: EMD.Store.aliasWithThis 'load'
   ajax: EMD.Store.alias 'ajax'
 
+  extend: ->
+    args = Array.prototype.slice.call arguments
+    args = $.map args, (arg)->
+      console.log arg if arg instanceof Function
+
+    @_super.apply @, args
+
   _beforeLoad: (data)->
     @_needsBeforeLoad = false
     attributes = @attributes()

@@ -18,8 +18,15 @@ this.setup = function() {
 };
 describe('attr.belongsTo', function() {
   beforeEach(setup);
-  return it('Should have shorthand definition', function() {
+  it('should have shorthand definition', function() {
     return expect(EMD.attr.hasMany).to.be.an('function');
+  });
+  return it('should load', function() {
+    return App.Parent = EMD.Model.extend(function() {
+      return {
+        children: EMD.has
+      };
+    });
   });
 });
 

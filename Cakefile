@@ -2,6 +2,7 @@ mincer = require 'mincer'
 fs = require 'fs'
 uglify = require 'uglify-js'
 spawn = require('child_process').spawn
+log = console.log
 
 option '-g', '--grep [TEST]', 'sets the grep for `cake test`'
 
@@ -30,20 +31,20 @@ task 'package', 'package the distributables', ->
 task 'package:test', 'package tests', ->
   invoke 'package:raw'
   env = new mincer.Environment()
+  env.expireIndex()
   env.appendPath 'test'
   test_raw = env.findAsset 'test'
   fs.writeFileSync test_dist_raw, test_raw
+  log "Wrote #{test_dist_raw}"
 
 task 'test:server', 'run tests', ->
-  test = ->
+  test = (file)->
+    return unless file instanceof Object or file.indexOf("#{__dirname}/src") is 0 or file.indexOf("#{__dirname}/test") is 0
+    log file
     invoke 'package:test'
+
   watch = require "watch"
-  watch.watchTree "#{__dirname}",
-    filter: (file)->
-      return false if file.indexOf("#{__dirname}/src") == 0
-      return false if file.indexOf("#{__dirname}/test") == 0
-      true
-    test
+  watch.watchTree "#{__dirname}", test
 
   livereload = require 'livereload'
   reloader = livereload.createServer port: 4001
@@ -70,7 +71,7 @@ task 'test', 'test!', (options)->
   phantomjs.stderr.pipe process.stdout
   phantomjs.on 'exit', (code)->
     if (code == 127)
-      print "Perhaps phantomjs is not installed?\n"
+      log "Perhaps phantomjs is not installed?\n"
     process.exit code
 
 task 'build', 'build', ->
