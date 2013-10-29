@@ -50,12 +50,11 @@ describe 'EMD.attr', ->
         url: 'http://children'
         parent: EMD.attr.belongsTo parent_id: 'App.Parent'
       App.Parent = EMD.Model.extend
-        children: EMD.attr.hasMany 'App.Child'
+        children: EMD.attr.hasMany parent_id: 'App.Child'
 
       child = App.Child.create()
-
       parent = App.Parent.create()
       parent.load id: 4
       children = parent.get 'children'
       expect(children.get 'url').to.equal child.get 'url'
-      expect(children.get 'query').to.equal parent_id: 4
+      expect(children.get 'query').to.eql parent_id: 4

@@ -79,35 +79,22 @@ EMD.attr.belongsTo = function(serialized_name_to_model_name, meta) {
   };
   return EMD.attr(serialized_name, meta);
 };
-EMD.attr.hasMany = function(model_name, meta) {
-  var parent_name, query, type;
+EMD.attr.hasMany = function(foreign_key_to_child_model, meta) {
+  var child_model_name, foreign_key, model, query;
   if (meta == null) {
     meta = {};
   }
-  if (!model_name) {
-    Em.assert("You must specify model_name for hasMany");
-  }
-  type = false;
-  query = false;
-  parent_name = false;
+  foreign_key = Em.keys(foreign_key_to_child_model)[0];
+  child_model_name = foreign_key_to_child_model[foreign_key];
+  model = false;
+  query = {};
   return (function() {
-    var belongs_to;
-    if (!type) {
-      type = Em.get(model_name);
-      if (!parent_name) {
-        parent_name = Em.get(this.constructor, 'singular');
-      }
-      belongs_to = type.attributes()[parent_name];
-      query = {};
-      query[belongs_to.serialized_name] = this.get('id');
+    query[foreign_key] = this.get('id');
+    if (!model) {
+      model = Em.get(child_model_name);
     }
-    return EMD.RecordArrayRelation.create({
-      parent: this,
-      modelBinding: model_name,
-      urlBinding: "parent." + meta.urlBinding,
-      query: query
-    });
-  }).property();
+    return model.where(query);
+  }).property('id');
 };
 EMD.attr.moment = function(serialized_name, meta) {
   if (meta == null) {
@@ -488,6 +475,17 @@ EMD.Model.reopenClass({
   cache: EMD.Store.aliasWithThis('cache'),
   load: EMD.Store.aliasWithThis('load'),
   ajax: EMD.Store.alias('ajax'),
+  where: function(query) {
+    var mixin, mixins, url;
+    mixins = this.PrototypeMixin.mixins;
+    mixin = mixins[mixins.length - 1];
+    url = mixin.properties.url;
+    return EMD.RecordArray.create({
+      model: this,
+      url: url,
+      query: query
+    });
+  },
   extend: function() {
     var args;
     args = Array.prototype.slice.call(arguments);

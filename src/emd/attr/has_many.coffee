@@ -1,21 +1,11 @@
-EMD.attr.hasMany = (model_name, meta = {}) ->
-  Em.assert "You must specify model_name for hasMany" unless model_name
+EMD.attr.hasMany = (foreign_key_to_child_model, meta = {}) ->
+  foreign_key = Em.keys(foreign_key_to_child_model)[0]
+  child_model_name = foreign_key_to_child_model[foreign_key]
 
-  type = false
-  query = false
-  parent_name = false
-
+  model = false
+  query = {}
   (->
-    unless type
-      type = Em.get model_name
-      parent_name = Em.get @constructor, 'singular' unless parent_name
-      belongs_to = type.attributes()[parent_name]
-      query = {}
-      query[belongs_to.serialized_name] = @get 'id'
-
-    EMD.RecordArrayRelation.create
-      parent: @
-      modelBinding: model_name
-      urlBinding: "parent." + meta.urlBinding
-      query: query
-  ).property()
+    query[foreign_key] = @get 'id'
+    model = Em.get child_model_name unless model
+    model.where query
+  ).property 'id'

@@ -100,7 +100,9 @@ describe('EMD.attr', function() {
         })
       });
       App.Parent = EMD.Model.extend({
-        children: EMD.attr.hasMany('App.Child')
+        children: EMD.attr.hasMany({
+          parent_id: 'App.Child'
+        })
       });
       child = App.Child.create();
       parent = App.Parent.create();
@@ -109,7 +111,7 @@ describe('EMD.attr', function() {
       });
       children = parent.get('children');
       expect(children.get('url')).to.equal(child.get('url'));
-      return expect(children.get('query')).to.equal({
+      return expect(children.get('query')).to.eql({
         parent_id: 4
       });
     });

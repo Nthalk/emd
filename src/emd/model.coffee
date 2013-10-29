@@ -258,6 +258,15 @@ EMD.Model.reopenClass
   load: EMD.Store.aliasWithThis 'load'
   ajax: EMD.Store.alias 'ajax'
 
+  where: (query)->
+    mixins = @PrototypeMixin.mixins
+    mixin = mixins[mixins.length - 1]
+    url = mixin.properties.url
+    EMD.RecordArray.create
+      model: @
+      url: url
+      query: query
+
   extend: ->
     args = Array.prototype.slice.call arguments
     args = $.map args, (arg)->
