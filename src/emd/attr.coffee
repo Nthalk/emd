@@ -8,6 +8,16 @@ EMD.attr = (serialized_name, meta = {})->
 
   key = "_data.#{serialized_name}"
 
+  if meta.convertTo
+    Em.deprecate "EMD.attr, use convertToData instead of convertTo"
+    meta.convertToData = meta.convertTo
+    delete meta.convertTo
+
+  if meta.convertFrom
+    Em.deprecate "EMD.attr, use convertFromData instead of convertFrom"
+    meta.convertFromData = meta.convertFrom
+    delete meta.convertFrom
+
   meta.extra_keys ||= []
   unless meta.extra_keys instanceof Array
     meta.extra_keys = [meta.extra_keys]
@@ -19,7 +29,7 @@ EMD.attr = (serialized_name, meta = {})->
     if set != undefined
       @set 'isDirty', true
       if meta.convertTo
-        @set key, meta.convertTo(set)
+        @set key, meta.convertToData(set)
       else
         @set key, set
       set
@@ -29,7 +39,7 @@ EMD.attr = (serialized_name, meta = {})->
         if typeof meta.if_null == 'function'
           existing = meta.if_null.call @
         else existing = meta.if_null
-      return meta.convertFrom(existing) if meta.convertFrom
+      return meta.convertFromData(existing) if meta.convertFromData
       existing
 
   property.property.apply(property, property_args).meta(meta)

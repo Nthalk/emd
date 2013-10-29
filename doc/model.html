@@ -444,8 +444,10 @@ that we have changed their contents</p>
   load: EMD.Store.aliasWithThis <span class="string">'load'</span>
   ajax: EMD.Store.alias <span class="string">'ajax'</span>
 
-  _beforeLoad: (data)-&gt;
-    <span class="property">@_needsBeforeLoad</span> = <span class="literal">false</span>
+  extend: -&gt;
+    args = Array.prototype.slice.call arguments
+    args = $.map args, (arg)-&gt;
+      console.log arg <span class="keyword">if</span> arg <span class="keyword">instanceof</span> Function
     attributes = <span class="property">@attributes</span>()
     has_serialized_keys = {}
     serialized_keys = Em.keys data

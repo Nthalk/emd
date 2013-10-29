@@ -122,7 +122,7 @@ EMD.Model = Em.Object.extend Em.Evented,
       return if meta.readonly
       if serialized_name = meta.serialized_name
         value = @get name
-        value = meta.convertTo(value) if meta.convertTo
+        value = meta.convertToData(value) if meta.convertToData
         props[serialized_name] = value if value != undefined
     props
 
@@ -261,8 +261,9 @@ EMD.Model.reopenClass
   extend: ->
     args = Array.prototype.slice.call arguments
     args = $.map args, (arg)->
-      console.log arg if arg instanceof Function
-
+      if arg instanceof Function
+        return arg()
+      arg
     @_super.apply @, args
 
   _beforeLoad: (data)->
@@ -290,10 +291,11 @@ EMD.Model.reopenClass
   _needsBeforeLoad: true
 
   attributes: ->
-    attributes = {}
+    return @_attributes if @_attributes
+    @_attributes = {}
     @eachComputedProperty (name, meta)=>
-      attributes[name] = meta if serialized_name = meta.serialized_name
-    attributes
+      @_attributes[name] = meta if serialized_name = meta.serialized_name
+    @_attributes
 
   fromJson: (data, instance)->
     # Try to load singular

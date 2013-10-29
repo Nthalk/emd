@@ -6,10 +6,9 @@ describe 'sanity', ->
     expect(Em).to.be.an('object')
     expect(EMD).to.be.an('object')
 
-
 App = Em.Application.create()
 App.setupForTesting()
 App.injectTestHelpers()
+
 @setup = ->
   App.reset()
-

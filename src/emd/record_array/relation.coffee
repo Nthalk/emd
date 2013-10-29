@@ -27,8 +27,3 @@ EMD.RecordArrayRelation = EMD.RecordArray.extend
   nextNewIsntNew: (->
     @set 'nextNew' if @get 'nextNew.id'
   ).observes 'nextNew.id'
-
-  create: (opts = {})->
-    model = @get 'model'
-    query = @get 'query'
-    model.create $.extend query, opts

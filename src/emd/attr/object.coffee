@@ -1,7 +1,7 @@
 EMD.attr.object = (serialized_name, meta = {})->
-  meta.convertFrom = (json)->
+  meta.convertFromData = (json)->
     json ||= {} if meta.optional
     Em.ObjectProxy.create content: json
-  meta.convertTo = (proxy)->
+  meta.convertToData = (proxy)->
     proxy.get 'content'
   EMD.attr serialized_name, meta

@@ -1,15 +1,15 @@
 EMD.attr.moment = (serialized_name, meta = {})->
-  meta.convertFrom = (date)->
+  meta.convertFromData = (date)->
     moment(date) if date
-  meta.convertTo = (moment)->
+  meta.convertToData = (moment)->
     moment.toDate() if moment
   EMD.attr(serialized_name, meta)
 
 EMD.attr.duration = (serialized_name, meta = {})->
   unit = meta.unit ||= 'seconds'
-  meta.convertFrom = (unit_value)->
+  meta.convertFromData = (unit_value)->
     moment.duration(unit_value,
       unit) unless unit_value == undefined || unit_value == null
-  meta.convertTo = (duration)->
+  meta.convertToData = (duration)->
     duration.as(unit) if duration
   EMD.attr serialized_name, meta

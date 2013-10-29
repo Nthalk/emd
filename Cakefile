@@ -3,6 +3,7 @@ fs = require 'fs'
 uglify = require 'uglify-js'
 spawn = require('child_process').spawn
 log = console.log
+watch = require "watch"
 
 option '-g', '--grep [TEST]', 'sets the grep for `cake test`'
 
@@ -10,11 +11,10 @@ emd_dist_raw = "dist/emd.js"
 emd_dist_min = "dist/emd.min.js"
 emd_dist_min_map = "dist/emd.min.js.map"
 test_dist_raw = "dist/emd.test.js"
-emd_raw = false
 
 task 'package:raw', 'package the raw distributable', ->
-  return if emd_raw
   env = new mincer.Environment()
+  env.expireIndex()
   env.appendPath 'src'
   emd_raw = env.findAsset 'emd'
   fs.writeFileSync emd_dist_raw, emd_raw
@@ -35,16 +35,18 @@ task 'package:test', 'package tests', ->
   env.appendPath 'test'
   test_raw = env.findAsset 'test'
   fs.writeFileSync test_dist_raw, test_raw
-  log "Wrote #{test_dist_raw}"
 
 task 'test:server', 'run tests', ->
-  test = (file)->
-    return unless file instanceof Object or file.indexOf("#{__dirname}/src") is 0 or file.indexOf("#{__dirname}/test") is 0
-    log file
-    invoke 'package:test'
 
-  watch = require "watch"
-  watch.watchTree "#{__dirname}", test
+  "src test examples".split(" ").forEach (dir)->
+    path = "#{__dirname}/#{dir}"
+    test = (file)->
+      return unless file.constructor is String
+      return unless file.indexOf(path) is 0
+      invoke 'package:test'
+    watch.watchTree path, test
+
+  invoke 'package:test'
 
   livereload = require 'livereload'
   reloader = livereload.createServer port: 4001
@@ -80,15 +82,14 @@ task 'build', 'build', ->
 
 task 'watch', 'watch', ->
   watch = require "watch"
-  build = ->
-    invoke 'build'
-  watch.watchTree "#{__dirname}",
-    filter: (file)->
-      return false if file.indexOf("#{__dirname}/src") == 0
-      return false if file.indexOf("#{__dirname}/test") == 0
-      return false if file.indexOf("#{__dirname}/example") == 0
-      true
-    build
+  "src test examples".split(" ").forEach (dir)->
+    path = "#{__dirname}/#{dir}"
+    build = (file)->
+      return unless file.constructor is String
+      return unless file.indexOf(path) is 0
+      invoke 'build'
+    watch.watchTree path, build
+  invoke 'build'
 
 task 'doc', 'generate documentation', ->
   fs = require 'fs'

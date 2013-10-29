@@ -8,6 +8,16 @@ EMD.attr = function(serialized_name, meta) {
   }
   Em.assert("You must specify a serialized name", meta.serialized_name = serialized_name);
   key = "_data." + serialized_name;
+  if (meta.convertTo) {
+    Em.deprecate("EMD.attr, use convertToData instead of convertTo");
+    meta.convertToData = meta.convertTo;
+    delete meta.convertTo;
+  }
+  if (meta.convertFrom) {
+    Em.deprecate("EMD.attr, use convertFromData instead of convertFrom");
+    meta.convertFromData = meta.convertFrom;
+    delete meta.convertFrom;
+  }
   meta.extra_keys || (meta.extra_keys = []);
   if (!(meta.extra_keys instanceof Array)) {
     meta.extra_keys = [meta.extra_keys];
@@ -20,7 +30,7 @@ EMD.attr = function(serialized_name, meta) {
     if (set !== void 0) {
       this.set('isDirty', true);
       if (meta.convertTo) {
-        this.set(key, meta.convertTo(set));
+        this.set(key, meta.convertToData(set));
       } else {
         this.set(key, set);
       }
@@ -34,8 +44,8 @@ EMD.attr = function(serialized_name, meta) {
           existing = meta.if_null;
         }
       }
-      if (meta.convertFrom) {
-        return meta.convertFrom(existing);
+      if (meta.convertFromData) {
+        return meta.convertFromData(existing);
       }
       return existing;
     }
@@ -54,7 +64,7 @@ EMD.attr.belongsTo = function(serialized_name_to_model_name, meta) {
   model_name = serialized_name_to_model_name[serialized_name];
   meta.typeString = model_name;
   raw_type = null;
-  meta.convertFrom = function(id) {
+  meta.convertFromData = function(id) {
     if (!raw_type) {
       raw_type = meta.type = Em.get(model_name);
     }
@@ -62,7 +72,7 @@ EMD.attr.belongsTo = function(serialized_name_to_model_name, meta) {
       return raw_type.find(id);
     }
   };
-  meta.convertTo = function(model) {
+  meta.convertToData = function(model) {
     if (model) {
       return model.get('id');
     }
@@ -70,34 +80,32 @@ EMD.attr.belongsTo = function(serialized_name_to_model_name, meta) {
   return EMD.attr(serialized_name, meta);
 };
 EMD.attr.hasMany = function(model_name, meta) {
-  var key, property, val;
+  var parent_name, query, type;
   if (meta == null) {
     meta = {};
-  }
-  if (typeof model_name === "object") {
-    key = Em.keys(model_name)[0];
-    val = model_name[key];
-    model_name = val;
-    meta.urlBinding = "links." + key;
   }
   if (!model_name) {
     Em.assert("You must specify model_name for hasMany");
   }
-  if (!meta.urlBinding) {
-    Em.assert("You must specify urlBinding for hasMany");
-  }
-  return property = (function() {
-    var parent_id, _base, _name;
-    meta.query || (meta.query = {});
-    if (parent_id = this.get('id')) {
-      meta.foreign_key || (meta.foreign_key = "" + (Em.get(this.constructor, 'singular')) + "_id");
-      (_base = meta.query)[_name = meta.foreign_key] || (_base[_name] = this.get('id'));
+  type = false;
+  query = false;
+  parent_name = false;
+  return (function() {
+    var belongs_to;
+    if (!type) {
+      type = Em.get(model_name);
+      if (!parent_name) {
+        parent_name = Em.get(this.constructor, 'singular');
+      }
+      belongs_to = type.attributes()[parent_name];
+      query = {};
+      query[belongs_to.serialized_name] = this.get('id');
     }
     return EMD.RecordArrayRelation.create({
       parent: this,
       modelBinding: model_name,
       urlBinding: "parent." + meta.urlBinding,
-      query: meta.query
+      query: query
     });
   }).property();
 };
@@ -105,12 +113,12 @@ EMD.attr.moment = function(serialized_name, meta) {
   if (meta == null) {
     meta = {};
   }
-  meta.convertFrom = function(date) {
+  meta.convertFromData = function(date) {
     if (date) {
       return moment(date);
     }
   };
-  meta.convertTo = function(moment) {
+  meta.convertToData = function(moment) {
     if (moment) {
       return moment.toDate();
     }
@@ -124,12 +132,12 @@ EMD.attr.duration = function(serialized_name, meta) {
     meta = {};
   }
   unit = meta.unit || (meta.unit = 'seconds');
-  meta.convertFrom = function(unit_value) {
+  meta.convertFromData = function(unit_value) {
     if (!(unit_value === void 0 || unit_value === null)) {
       return moment.duration(unit_value, unit);
     }
   };
-  meta.convertTo = function(duration) {
+  meta.convertToData = function(duration) {
     if (duration) {
       return duration.as(unit);
     }
@@ -140,7 +148,7 @@ EMD.attr.object = function(serialized_name, meta) {
   if (meta == null) {
     meta = {};
   }
-  meta.convertFrom = function(json) {
+  meta.convertFromData = function(json) {
     if (meta.optional) {
       json || (json = {});
     }
@@ -148,7 +156,7 @@ EMD.attr.object = function(serialized_name, meta) {
       content: json
     });
   };
-  meta.convertTo = function(proxy) {
+  meta.convertToData = function(proxy) {
     return proxy.get('content');
   };
   return EMD.attr(serialized_name, meta);
@@ -330,8 +338,8 @@ EMD.Model = Em.Object.extend(Em.Evented, {
       }
       if (serialized_name = meta.serialized_name) {
         value = _this.get(name);
-        if (meta.convertTo) {
-          value = meta.convertTo(value);
+        if (meta.convertToData) {
+          value = meta.convertToData(value);
         }
         if (value !== void 0) {
           return props[serialized_name] = value;
@@ -485,8 +493,9 @@ EMD.Model.reopenClass({
     args = Array.prototype.slice.call(arguments);
     args = $.map(args, function(arg) {
       if (arg instanceof Function) {
-        return console.log(arg);
+        return arg();
       }
+      return arg;
     });
     return this._super.apply(this, args);
   },
@@ -520,16 +529,18 @@ EMD.Model.reopenClass({
   },
   _needsBeforeLoad: true,
   attributes: function() {
-    var attributes,
-      _this = this;
-    attributes = {};
+    var _this = this;
+    if (this._attributes) {
+      return this._attributes;
+    }
+    this._attributes = {};
     this.eachComputedProperty(function(name, meta) {
       var serialized_name;
       if (serialized_name = meta.serialized_name) {
-        return attributes[name] = meta;
+        return _this._attributes[name] = meta;
       }
     });
-    return attributes;
+    return this._attributes;
   },
   fromJson: function(data, instance) {
     var plural, singular,
@@ -745,14 +756,5 @@ EMD.RecordArrayRelation = EMD.RecordArray.extend({
     if (this.get('nextNew.id')) {
       return this.set('nextNew');
     }
-  }).observes('nextNew.id'),
-  create: function(opts) {
-    var model, query;
-    if (opts == null) {
-      opts = {};
-    }
-    model = this.get('model');
-    query = this.get('query');
-    return model.create($.extend(query, opts));
-  }
+  }).observes('nextNew.id')
 });
