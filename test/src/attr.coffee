@@ -1,5 +1,4 @@
 describe 'EMD.attr', ->
-  beforeEach: setup
   it ' should define attributes', ->
     App.User = EMD.Model.extend
       name: EMD.attr "name"
@@ -44,6 +43,10 @@ describe 'EMD.attr', ->
       child.set 'parent', App.Parent.create(id: 2)
       expect(child.toJson().parent_id).to.equal 2
 
+      parent = App.Parent.create()
+      child.set 'parent', parent
+      expect(child.get "_data.parent_id").to.equal undefined
+
   describe '#hasMany', ->
     it 'should work', ->
       App.Child = EMD.Model.extend
@@ -58,3 +61,24 @@ describe 'EMD.attr', ->
       children = parent.get 'children'
       expect(children.get 'url').to.equal child.get 'url'
       expect(children.get 'query').to.eql parent_id: 4
+
+    it 'should allow complex querying', ->
+      App.Child = EMD.Model.extend
+        url: 'http://children'
+        visible: EMD.attr 'visible'
+        parent: EMD.attr.belongsTo parent_id: 'App.Parent'
+
+      App.Parent = EMD.Model.extend
+        children: EMD.attr.hasMany 'App.Child', where: ->
+          parent: @, visible: true
+
+      parent = App.Parent.create()
+      children = parent.get 'children'
+      child = children.create()
+      expect(child.get 'parent').to.equal parent
+      expect(child.get 'visible').to.equal true
+      expect(child.toJson().parent_id).to.equal undefined
+      expect(child.toJson().visible).to.equal true
+
+      parent.load id: parent_id = 4
+      expect(child.toJson().parent_id).to.equal parent_id

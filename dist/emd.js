@@ -29,7 +29,7 @@ EMD.attr = function(serialized_name, meta) {
     var existing;
     if (set !== void 0) {
       this.set('isDirty', true);
-      if (meta.convertTo) {
+      if (meta.convertToData) {
         this.set(key, meta.convertToData(set));
       } else {
         this.set(key, set);
@@ -80,21 +80,35 @@ EMD.attr.belongsTo = function(serialized_name_to_model_name, meta) {
   return EMD.attr(serialized_name, meta);
 };
 EMD.attr.hasMany = function(foreign_key_to_child_model, meta) {
-  var child_model_name, foreign_key, model, query;
+  var child_model_name, foreign_key, model, property, results, where;
   if (meta == null) {
     meta = {};
   }
-  foreign_key = Em.keys(foreign_key_to_child_model)[0];
-  child_model_name = foreign_key_to_child_model[foreign_key];
+  child_model_name = foreign_key_to_child_model;
+  if (typeof foreign_key_to_child_model === 'object') {
+    foreign_key = Em.keys(foreign_key_to_child_model)[0];
+    child_model_name = foreign_key_to_child_model[foreign_key];
+  }
   model = false;
-  query = {};
-  return (function() {
+  meta.extra_keys || (meta.extra_keys = ['id']);
+  where = meta.where || function() {
+    var query;
+    query = {};
     query[foreign_key] = this.get('id');
+    return query;
+  };
+  results = false;
+  property = function(triggered, set) {
+    if (results) {
+      results.set('query', where.call(this));
+      return results;
+    }
     if (!model) {
       model = Em.get(child_model_name);
     }
-    return model.where(query);
-  }).property('id');
+    return results = model.where(where.call(this));
+  };
+  return property.property.apply(property, meta.extra_keys);
 };
 EMD.attr.moment = function(serialized_name, meta) {
   if (meta == null) {
@@ -259,43 +273,26 @@ EMD.Store.reopenClass({
   }
 });
 EMD.Model = Em.Object.extend(Em.Evented, {
-  link: null,
-  linkChange: function() {
-    var cachebust, connector, link;
-    link = this.get('link');
-    cachebust = "_cacheBust=" + (new Date().getTime());
-    if (link.indexOf('_cacheBust') === -1) {
-      if (link.indexOf('?' === -1)) {
-        connector = '?';
-      } else {
-        connector = '&';
-      }
-      link = "" + link + connector + cachebust;
-    } else {
-      link = link.replace(/([\?&])_cacheBust=\d+/, "$1" + cachebust);
-    }
-    return this.set('link', link);
-  },
-  linkDidChange: (function() {
-    if (!this.get("isLoaded")) {
-      return this.reload();
-    }
-  }).observes("link"),
+  baseUrl: (function() {
+    return Em.warn("You should set a baseUrl on " + this.constructor);
+  }).property(),
   url: EMD.attr('url', {
     readonly: true,
-    extra_keys: ['id', 'link'],
+    optional: true,
+    extra_keys: ['id', 'baseUrl'],
     if_null: function() {
-      var id, link;
-      if (!(link = this.get("link"))) {
+      var base_url, id;
+      if (!(base_url = this.get("baseUrl"))) {
         return false;
       }
       if (!(id = this.get("id") || id === null)) {
-        return link;
+        return base_url;
       }
-      return "" + link + "/" + id;
+      return "" + base_url + "/" + id;
     }
   }),
   id: EMD.attr('id', {
+    optional: true,
     readonly: true
   }),
   idDidChange: (function() {
@@ -312,7 +309,7 @@ EMD.Model = Em.Object.extend(Em.Evented, {
     return this.reload();
   },
   toString: function() {
-    return "" + this.constructor + "(" + (this.get('id')) + ")";
+    return "" + this.constructor + "(" + (this.get('id') || 'new') + ")";
   },
   toJson: function() {
     var props,
@@ -362,13 +359,15 @@ EMD.Model = Em.Object.extend(Em.Evented, {
     return this;
   },
   reload: function() {
-    var id, url,
+    var url,
       _this = this;
-    id = this.get("id");
-    if (id === void 0) {
+    if (this.get("id") === void 0) {
       return this;
     }
     if (!(url = this.get("url"))) {
+      return this;
+    }
+    if (this.get("isLoading")) {
       return this;
     }
     this.set("isLoaded", false);
@@ -404,9 +403,8 @@ EMD.Model = Em.Object.extend(Em.Evented, {
     }
     return new Em.RSVP.Promise(function(ok, er) {
       var data, method, url;
-      if (!_this.get("link")) {
-        console.log("deferring");
-        return _this.addObserver("link", _this, function() {
+      if (!_this.get("baseUrl")) {
+        return _this.addObserver("baseUrl", _this, function() {
           return this.save().then(ok, er);
         });
       } else {
@@ -643,6 +641,16 @@ EMD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
     this.one("load", this, fn);
     return this;
   },
+  create: function(overrides) {
+    var model, query;
+    if (overrides == null) {
+      overrides = {};
+    }
+    model = this.get('model');
+    query = this.get('query');
+    $.extend(overrides, query);
+    return model.create(overrides);
+  },
   reload: function(overrides) {
     if (overrides == null) {
       overrides = {};
@@ -655,7 +663,7 @@ EMD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
     if (!this._inited) {
       return;
     }
-    if (!this.get("_model.link")) {
+    if (!this.get("_model.baseUrl")) {
       return;
     }
     if (!(url = this.get("url"))) {
@@ -684,7 +692,7 @@ EMD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
     }).error(function(err) {
       return _this.error(err, url, query);
     });
-  }).observes("query", "url", "_model.link")
+  }).observes("query", "url", "_model.baseUrl")
 });
 EMD.RecordArrayPaged = EMD.RecordArray.extend({
   page: (function(_, set) {

@@ -28,15 +28,15 @@ EMD.attr = (serialized_name, meta = {})->
   property = (_, set)->
     if set != undefined
       @set 'isDirty', true
-      if meta.convertTo
-        @set key, meta.convertToData(set)
+      if meta.convertToData
+        @set key, meta.convertToData set
       else
         @set key, set
       set
     else
       existing = @get key
-      if existing == undefined and meta.if_null
-        if typeof meta.if_null == 'function'
+      if existing is undefined and meta.if_null
+        if typeof meta.if_null is 'function'
           existing = meta.if_null.call @
         else existing = meta.if_null
       return meta.convertFromData(existing) if meta.convertFromData

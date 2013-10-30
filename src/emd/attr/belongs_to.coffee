@@ -10,6 +10,6 @@ EMD.attr.belongsTo = (serialized_name_to_model_name, meta = {})->
     raw_type.find id if id
 
   meta.convertToData = (model)->
-    model.get 'id' if model
+    return model.get 'id' if model
 
   EMD.attr serialized_name, meta

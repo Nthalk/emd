@@ -59,6 +59,12 @@ EMD.RecordArray = Em.ArrayProxy.extend Em.Evented,
     @one "load", @, fn
     @
 
+  create: (overrides = {})->
+    model = @get 'model'
+    query = @get 'query'
+    $.extend overrides, query
+    model.create overrides
+
   reload: (overrides = {})->
     @set "query", $.extend({}, @get("query"), overrides)
 
@@ -67,7 +73,7 @@ EMD.RecordArray = Em.ArrayProxy.extend Em.Evented,
     return unless @_inited
 
     # Hmm... url not available? When does this happen again?
-    return unless @get "_model.link"
+    return unless @get "_model.baseUrl"
 
     # no url?
     return unless url = @get "url"
@@ -96,4 +102,4 @@ EMD.RecordArray = Em.ArrayProxy.extend Em.Evented,
       @error err, url, query
     )
 
-  ).observes "query", "url", "_model.link"
+  ).observes "query", "url", "_model.baseUrl"

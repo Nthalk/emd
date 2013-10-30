@@ -2,101 +2,22 @@
 # = require ./store
 #-->
 
-#
-# Models are collections of attributes, that can be persisted via HTTP methods
-# on a specified path or `link`.
-#
-# Basic Usage
-# ----
-#
-# Creating a model that maps the following json document:
-#
-#     user:
-#       id: 1
-#       name: "Carl"
-#       email_address: "carl@yay.com"
-#
-# Located at `/api/users/1`
-#
-# Add a link property to your application for the model:
-#
-#     App = Em.Application.create
-#       userLink: "/api/users"
-#
-# Define the model class:
-#
-#     App.User = EMD.Model.extend
-#       linkBinding: "App.userLink"
-#       name: EMD.attr "name"
-#       emailAddress: EMD.attr "email_address"
-#
-# And then use it in your application:
-#
-#     u = App.User.find 1
-#     u.get "name"          => "carl"
-#     u.get "emailAddress"  => "carl@yay.com"
-#     u.get "link"          => "/api/users"
-#     u.get "url"           => "/api/users/1"
-#
-# Annotated source
-# ----
+
 EMD.Model = Em.Object.extend Em.Evented,
-# Link
-# ----
-# The `link` property  defines the resource path for __all__ models of a type.
-#
-# For example, all `App.User` models would share a `link` like `/api/users`
-#
-# The link is special because it defines the basic path for retrieving,
-# creating, updating, and deleting models.
-#
-# When the `link` changes, all models of that type reload. All record arrays
-# that use that type as a base reload.
-#
-  link: null
+  baseUrl: (->
+    Em.warn "You should set a baseUrl on #{@constructor}"
+  ).property()
 
-  linkChange: ->
-    link = @get 'link'
-    cachebust = "_cacheBust=#{new Date().getTime()}"
-    if link.indexOf('_cacheBust') == -1
-      if link.indexOf '?' == -1
-        connector = '?'
-      else
-        connector = '&'
-      link = "#{link}#{connector}#{cachebust}"
-    else
-      link = link.replace /([\?&])_cacheBust=\d+/, "$1#{cachebust}"
-    @set 'link', link
-
-  linkDidChange: (->
-    @reload() unless @get "isLoaded"
-  ).observes "link"
-
-# Url
-# ---
-# The `url` property is different than the link in that it is the link with
-# the model's `id` property appended to it.
-#
-# See [EMD.attr](attr.html) for more documentation on `EMD.attr`.
   url: EMD.attr 'url',
     readonly: true
-    extra_keys: ['id', 'link']
+    optional: true
+    extra_keys: ['id', 'baseUrl']
     if_null: ->
-      return false unless link = @get "link"
-      return link unless id = @get("id") or id == null
-      "#{link}/#{id}"
+      return false unless base_url = @get "baseUrl"
+      return base_url unless id = @get("id") or id == null
+      "#{base_url}/#{id}"
 
-# Id
-# ---
-# This is id of the object, it is set to readonly because it is present in the
-# url that actions are performed on.
-#
-# For example, `App.User.find(1).get("url")` would return `/api/users/1`.
-#
-# When the id changes and becomes present, the record is cached in the store
-# cache.
-#
-  id: EMD.attr 'id', readonly: true
+  id: EMD.attr 'id', optional: true, readonly: true
 
   idDidChange: (->
     @constructor.cache(@)
@@ -114,7 +35,7 @@ EMD.Model = Em.Object.extend Em.Evented,
     @reload()
 
   toString: ->
-    "#{@constructor}(#{@get 'id' })"
+    "#{@constructor}(#{@get('id') || 'new' })"
 
   toJson: ->
     props = {}
@@ -125,8 +46,6 @@ EMD.Model = Em.Object.extend Em.Evented,
         value = meta.convertToData(value) if meta.convertToData
         props[serialized_name] = value if value != undefined
     props
-
-
 
 # _data
 # ----
@@ -176,9 +95,9 @@ EMD.Model = Em.Object.extend Em.Evented,
 # ----
 # If the model has an id, it triggers a fetch from the server.
   reload: ->
-    id = @get("id")
-    return @ if id == undefined
+    return @ if @get("id") is undefined
     return @ unless url = @get "url"
+    return @ if @get "isLoading"
 
     @set "isLoaded", false
     @set "isLoading", true
@@ -204,9 +123,8 @@ EMD.Model = Em.Object.extend Em.Evented,
     @load(ok) if ok
 
     new Em.RSVP.Promise (ok, er)=>
-      unless @get "link"
-        console.log "deferring"
-        @addObserver "link", @, ->
+      unless @get "baseUrl"
+        @addObserver "baseUrl", @, ->
           @save().then(ok, er)
       else
         console.log "saving"
