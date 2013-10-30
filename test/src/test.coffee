@@ -20,4 +20,3 @@ describe 'Test Environment', ->
     expect(EMD).to.be.an 'object'
     expect(App).to.be.an 'object'
     expect(@xhr).to.be.an 'object'
-    expect(@sinon).to.be.an 'object'

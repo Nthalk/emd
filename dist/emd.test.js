@@ -22,8 +22,7 @@ describe('Test Environment', function() {
     expect(Em).to.be.an('object');
     expect(EMD).to.be.an('object');
     expect(App).to.be.an('object');
-    expect(this.xhr).to.be.an('object');
-    return expect(this.sinon).to.be.an('object');
+    return expect(this.xhr).to.be.an('object');
   });
 });
 describe('EMD.attr', function() {

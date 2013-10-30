@@ -10,6 +10,6 @@
     "livereload": "*",
     "watch": "*",
     "connect": "*",
-    "docco":"*"
+    "ember-template-compiler": "*"
   }
 }

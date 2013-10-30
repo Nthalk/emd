@@ -1,3 +1,12 @@
-# = require_tree ./lib
+# = require_tree ./templates
+# = require_self
+# = require_tree .
 
-console.log "hello doc!"
+Doc = Em.Application.create
+  posts: []
+  LOG_TRANSITIONS: true
+  LOG_VIEW_LOOKUPS: true
+  LOG_ACTIVE_GENERATION: true
+
+
+Doc.Post = Em.Object.extend()
