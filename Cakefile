@@ -34,13 +34,13 @@ task 'doc:server', 'live documentation server', ->
   invoke 'package:doc'
 
   livereload = require 'livereload'
-  reloader = livereload.createServer port: 4001
+  reloader = livereload.createServer port: 4401
   reloader.watch "#{__dirname}/dist"
 
   connect = require('connect');
   server = connect.createServer()
   server.use connect.static("#{__dirname}/dist")
-  server.listen 4000
+  server.listen 4400
   require('child_process').spawn "open", ["http://localhost:4400/doc.html"]
 
 ################################################################################
