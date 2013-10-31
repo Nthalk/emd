@@ -1,13 +1,14 @@
+emblem_engine = require 'mincer-emblem-engine'
+mincer = require 'mincer'
 livereload = require 'livereload'
 connect = require 'connect'
-mincer = require 'mincer'
 spawn = require('child_process').spawn
 fs = require 'fs'
-path = require 'path'
-watch = require "watch"
-emblem_engine = require './lib/emblem_engine'
 
-root = path.resolve "#{__dirname}/../"
+watch = require "watch"
+
+path = require 'path'
+root = path.normalize "#{__dirname}/../"
 
 doc_dist_raw = "#{root}/dist/emd.doc.js"
 
@@ -24,12 +25,12 @@ exports.registerTasks = ->
 
   task 'doc:server', 'live documentation server', ->
     "doc/src".split(" ").forEach (dir)->
-      path = "#{root}/#{dir}"
+      doc_path = "#{root}/#{dir}"
       test = (file)->
         return unless file.constructor is String
-        return unless file.indexOf(path) is 0
+        return unless file.indexOf(doc_path) is 0
         invoke 'package:doc'
-      watch.watchTree path, test
+      watch.watchTree doc_path, test
 
     invoke 'package:doc'
 

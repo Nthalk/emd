@@ -31,3 +31,4 @@ exports.registerTasks = ->
     invoke 'package:doc'
     invoke 'package:emd'
     invoke 'package:emd:min'
+

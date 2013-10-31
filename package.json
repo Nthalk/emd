@@ -1,15 +1,17 @@
 {
-  "name": "emd",
-  "version": "0.1.0",
-  "author": "Nthalk <carl@etaylor.me>",
-  "dependencies": {
-    "coffee-script": "*",
-    "mincer": "*",
-    "uglify-js": "*",
-    "mocha-phantomjs": "*",
-    "livereload": "*",
-    "watch": "*",
-    "connect": "*",
-    "ember-template-compiler": "*"
-  }
+    "name": "emd",
+    "version": "0.1.0",
+    "author": "Nthalk <carl@etaylor.me>",
+    "dependencies": {},
+    "devDependencies": {
+        "coffee-script": "*",
+        "mincer": "*",
+        "uglify-js": "*",
+        "mocha-phantomjs": "*",
+        "livereload": "*",
+        "watch": "*",
+        "connect": "*",
+        "mincer": "*",
+        "mincer-emblem-engine": "*"
+    }
 }
