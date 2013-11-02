@@ -25,11 +25,12 @@ exports.registerTasks = ->
 
   task 'doc:server', 'live documentation server', ->
     "doc/src".split(" ").forEach (dir)->
-      doc_path = "#{root}/#{dir}"
+      doc_path = "#{root}#{dir}"
       test = (file)->
         return unless file.constructor is String
         return unless file.indexOf(doc_path) is 0
         invoke 'package:doc'
+
       watch.watchTree doc_path, test
 
     invoke 'package:doc'
