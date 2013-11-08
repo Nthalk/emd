@@ -4,13 +4,15 @@ livereload = require 'livereload'
 connect = require 'connect'
 spawn = require('child_process').spawn
 fs = require 'fs'
-
 watch = require "watch"
-
 path = require 'path'
+
+emblem_engine.options template_path: "/views/"
+
 root = path.normalize "#{__dirname}/../"
 
-doc_dist_raw = "#{root}/dist/emd.doc.js"
+doc_dist_js = "#{root}/dist/emd.doc.js"
+doc_dist_css = "#{root}/dist/emd.doc.css"
 
 exports.registerTasks = ->
   ################################################################################
@@ -20,8 +22,12 @@ exports.registerTasks = ->
     env.expireIndex()
     env.registerEngine ".emblem", emblem_engine
     env.appendPath "#{root}/doc/src"
-    doc_raw = env.findAsset 'doc'
-    fs.writeFileSync doc_dist_raw, doc_raw
+
+    doc_raw_js = env.findAsset 'doc.js'
+    fs.writeFileSync doc_dist_js, doc_raw_js
+
+    doc_raw_css = env.findAsset 'doc.css'
+    fs.writeFileSync doc_dist_css, doc_raw_css
 
   task 'doc:server', 'live documentation server', ->
     "doc/src".split(" ").forEach (dir)->

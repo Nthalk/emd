@@ -11,6 +11,7 @@
         "livereload": "*",
         "watch": "*",
         "connect": "*",
+        "stylus": "*",
         "mincer": "*",
         "mincer-emblem-engine": "*"
     }
